@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ChangeEvent } from "react";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { SiFacebook, SiInstagram } from "react-icons/si";
@@ -30,6 +30,17 @@ export default function App() {
     favorite: false,
     image: null,
   });
+
+  useEffect(() => {
+    document.title = "Contact Manager";
+
+    const fetchData = async () => {
+      const response = await fetch("http://localhost:5001/api/contact");
+      const data = await response.json();
+      console.log(data.contacts);
+    };
+    fetchData();
+  }, []);
 
   const [contacts, setContacts] = useState<StoredContact[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -95,11 +106,11 @@ export default function App() {
   };
 
   const toggleFavorite = (index: number) => {
-    setContacts((prev) => {
-      const updated = [...prev];
-      updated[index].favorite = !updated[index].favorite;
-      return updated;
-    });
+    setContacts((prev) =>
+      prev.map((contact, i) =>
+        i === index ? { ...contact, favorite: !contact.favorite } : contact
+      )
+    );
   };
 
   const deleteContact = (index: number) => {
