@@ -10,6 +10,7 @@ lerna-debug.log*
 # Node modules for both projects
 backend/node_modules/
 frontend/node_modules/
+/node_modules/
 
 # Build output
 dist
