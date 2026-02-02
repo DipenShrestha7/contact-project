@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import type { ChangeEvent } from "react";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { SiFacebook, SiInstagram } from "react-icons/si";
-
+import reactLogo from "./assets/react.svg";
 type ContactForm = {
+  id?: number;
   name: string;
   phone: string;
   email: string;
@@ -14,9 +15,16 @@ type ContactForm = {
   image: File | null;
 };
 
-type StoredContact = ContactForm & {
+type StoredContact = {
   id: number;
-  imageData?: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  facebook: string;
+  instagram: string;
+  favorite: boolean;
+  image?: string;
 };
 
 export default function App() {
@@ -31,6 +39,7 @@ export default function App() {
     image: null,
   });
 
+  const [contacts, setContacts] = useState<StoredContact[]>([]);
   useEffect(() => {
     document.title = "Contact Manager";
 
@@ -38,11 +47,11 @@ export default function App() {
       const response = await fetch("http://localhost:5001/api/contact");
       const data = await response.json();
       console.log(data.contacts);
+      setContacts(data.contacts);
     };
     fetchData();
   }, []);
 
-  const [contacts, setContacts] = useState<StoredContact[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
@@ -64,35 +73,84 @@ export default function App() {
     setEditingIndex(null);
   };
 
-  const submitForm = () => {
+  const submitForm = async () => {
     if (editingIndex !== null) {
       const updatedContact: StoredContact = {
         ...contacts[editingIndex],
         ...form,
-        imageData: form.image
+        image: form.image
           ? URL.createObjectURL(form.image)
-          : contacts[editingIndex].imageData,
+          : contacts[editingIndex].image,
       };
 
       const updatedContacts = [...contacts];
       updatedContacts[editingIndex] = updatedContact;
+
+      const formData = new FormData();
+      if (form.id !== undefined) {
+        formData.append("id", String(form.id));
+      }
+      formData.append("name", form.name);
+      formData.append("phone", form.phone);
+      formData.append("email", form.email);
+      formData.append("address", form.address);
+      formData.append("facebook", form.facebook);
+      formData.append("instagram", form.instagram);
+      if (form.image) {
+        formData.append("image", form.image);
+      }
+      try {
+        const response = await fetch(`http://localhost:5001/api/contact`, {
+          method: "PUT",
+          body: formData,
+        });
+
+        const savedContact = await response.json();
+
+        console.log("Contact added successfully");
+        console.log(savedContact);
+        resetForm();
+      } catch (error) {
+        console.error("Failed to update contact:", error);
+      }
+      resetForm();
       setContacts(updatedContacts);
     } else {
-      const newContact: StoredContact = {
-        ...form,
-        id: Date.now(),
-        imageData: form.image ? URL.createObjectURL(form.image) : "",
-      };
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("phone", form.phone);
+      formData.append("email", form.email);
+      formData.append("address", form.address);
+      formData.append("facebook", form.facebook);
+      formData.append("instagram", form.instagram);
+      if (form.image) {
+        formData.append("image", form.image);
+      }
+      try {
+        const response = await fetch("http://localhost:5001/api/contact", {
+          method: "POST",
+          body: formData,
+        });
 
-      setContacts([...contacts, newContact]);
+        const savedContact = await response.json();
+
+        // Add to state only after successful POST
+        setContacts((prev) => [...prev, savedContact]);
+        console.log("Contact added successfully");
+        console.log(savedContact);
+        resetForm();
+      } catch (error) {
+        console.error("Failed to add contact:", error);
+      }
+      resetForm();
     }
-    resetForm();
   };
 
   const startEdit = (index: number) => {
     const contact = contacts[index];
 
     setForm({
+      id: contact.id,
       name: contact.name,
       phone: contact.phone,
       email: contact.email,
@@ -108,12 +166,17 @@ export default function App() {
   const toggleFavorite = (index: number) => {
     setContacts((prev) =>
       prev.map((contact, i) =>
-        i === index ? { ...contact, favorite: !contact.favorite } : contact
-      )
+        i === index ? { ...contact, favorite: !contact.favorite } : contact,
+      ),
     );
   };
 
-  const deleteContact = (index: number) => {
+  const deleteContact = async (index: number, id: number) => {
+    const response = await fetch(`http://localhost:5001/api/contact/${id}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+    console.log(data.message);
     setContacts((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -131,42 +194,73 @@ export default function App() {
           </h2>
 
           <div className="space-y-4">
-            <input
-              className="w-full bg-gray-800 p-3 rounded-xl"
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-            <input
-              className="w-full bg-gray-800 p-3 rounded-xl"
-              placeholder="Phone"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
-            <input
-              className="w-full bg-gray-800 p-3 rounded-xl"
-              placeholder="Email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-            <input
-              className="w-full bg-gray-800 p-3 rounded-xl"
-              placeholder="Address"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-            />
-            <input
-              className="w-full bg-gray-800 p-3 rounded-xl"
-              placeholder="Facebook"
-              value={form.facebook}
-              onChange={(e) => setForm({ ...form, facebook: e.target.value })}
-            />
-            <input
-              className="w-full bg-gray-800 p-3 rounded-xl"
-              placeholder="Instagram"
-              value={form.instagram}
-              onChange={(e) => setForm({ ...form, instagram: e.target.value })}
-            />
+            <div className="space-y-4">
+              {/* NAME */}
+              <div className="flex flex-row justify-center items-center gap-2">
+                <h1 className="w-28 text-center">Name</h1>
+                <input
+                  className="w-full bg-gray-800 p-3 rounded-xl"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+              </div>
+
+              {/* PHONE */}
+              <div className="flex flex-row justify-center items-center gap-2">
+                <h1 className="w-28 text-center">Phone</h1>
+                <input
+                  className="w-full bg-gray-800 p-3 rounded-xl"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+              </div>
+
+              {/* EMAIL */}
+              <div className="flex flex-row justify-center items-center gap-2">
+                <h1 className="w-28 text-center">Email</h1>
+                <input
+                  className="w-full bg-gray-800 p-3 rounded-xl"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+              </div>
+
+              {/* ADDRESS */}
+              <div className="flex flex-row justify-center items-center gap-2">
+                <h1 className="w-28 text-center">Address</h1>
+                <input
+                  className="w-full bg-gray-800 p-3 rounded-xl"
+                  value={form.address}
+                  onChange={(e) =>
+                    setForm({ ...form, address: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* FACEBOOK */}
+              <div className="flex flex-row justify-center items-center gap-2">
+                <h1 className="w-28 text-center">Facebook</h1>
+                <input
+                  className="w-full bg-gray-800 p-3 rounded-xl"
+                  value={form.facebook}
+                  onChange={(e) =>
+                    setForm({ ...form, facebook: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* INSTAGRAM */}
+              <div className="flex flex-row justify-center items-center gap-2">
+                <h1 className="w-28 text-center">Instagram</h1>
+                <input
+                  className="w-full bg-gray-800 p-3 rounded-xl"
+                  value={form.instagram}
+                  onChange={(e) =>
+                    setForm({ ...form, instagram: e.target.value })
+                  }
+                />
+              </div>
+            </div>
 
             {/* IMAGE UPLOAD */}
             <input
@@ -210,11 +304,11 @@ export default function App() {
 
           {contacts.map((c, index) => (
             <div
-              key={c.id}
+              key={index}
               className="bg-gray-900 p-5 rounded-2xl shadow-lg border border-gray-800 flex items-center gap-5"
             >
               <img
-                src={c.imageData || "https://via.placeholder.com/60"}
+                src={c.image ? `http://localhost:5001${c.image}` : reactLogo}
                 className="w-16 h-16 rounded-xl object-cover border border-gray-700"
               />
 
@@ -276,7 +370,7 @@ export default function App() {
                   </button>
 
                   <button
-                    onClick={() => deleteContact(index)}
+                    onClick={() => deleteContact(index, c.id)}
                     className="bg-red-600 hover:bg-red-700 transition px-4 py-2 rounded-xl text-white"
                   >
                     Delete

@@ -2,16 +2,26 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import sequelize from "./config/db.js";
 import AuthenticateContactRoutes from "./routes/AuthenticateContactRoute.js";
+import path from "path";
+import multipart from "@fastify/multipart";
+import Static from "@fastify/static";
 
 const fastify = Fastify({
   logger: true,
 });
 
-fastify.register(AuthenticateContactRoutes, { prefix: "/api" });
-
 fastify.register(cors, {
-  origin: "*",
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
 });
+await fastify.register(multipart);
+
+fastify.register(Static, {
+  root: path.join(process.cwd(), "uploads"),
+  prefix: "/uploads/",
+});
+
+fastify.register(AuthenticateContactRoutes, { prefix: "/api" });
 
 const start = async () => {
   try {
