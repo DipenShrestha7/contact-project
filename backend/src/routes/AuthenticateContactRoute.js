@@ -36,7 +36,7 @@ function AuthenticateContactRoute(fastify) {
 
       reply.code(201).send(contact);
     } catch (error) {
-      reply.code(500).send({ error: error.errors });
+      reply.code(500).send({ error: error.message });
     }
   });
 

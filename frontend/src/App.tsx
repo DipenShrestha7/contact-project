@@ -75,6 +75,16 @@ export default function App() {
 
   const submitForm = async () => {
     if (editingIndex !== null) {
+      const isDuplicate = contacts.some(
+        (c) =>
+          c.id !== form.id &&
+          (c.email === form.email || c.phone === form.phone),
+      );
+
+      if (isDuplicate) {
+        alert("Email or phone already exists!");
+        return;
+      }
       const updatedContact: StoredContact = {
         ...contacts[editingIndex],
         ...form,
@@ -116,6 +126,14 @@ export default function App() {
       resetForm();
       setContacts(updatedContacts);
     } else {
+      const isDuplicate = contacts.some(
+        (c) => c.email === form.email || c.phone === form.phone,
+      );
+
+      if (isDuplicate) {
+        alert("Email or phone already exists!");
+        return;
+      }
       const formData = new FormData();
       formData.append("name", form.name);
       formData.append("phone", form.phone);
@@ -188,113 +206,129 @@ export default function App() {
 
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
         {/* FORM */}
-        <div className="bg-gray-900 px-6 py-4 rounded-2xl shadow-lg border border-gray-800 flex-1">
-          <h2 className="text-2xl font-semibold mb-4">
-            {editingIndex !== null ? "Edit Contact" : "Add Contact"}
-          </h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitForm();
+          }}
+        >
+          <div className="bg-gray-900 px-6 py-4 rounded-2xl shadow-lg border border-gray-800 flex-1">
+            <h2 className="text-2xl font-semibold mb-4">
+              {editingIndex !== null ? "Edit Contact" : "Add Contact"}
+            </h2>
 
-          <div className="space-y-4">
             <div className="space-y-4">
-              {/* NAME */}
-              <div className="flex flex-row justify-center items-center gap-2">
-                <h1 className="w-28 text-center">Name</h1>
-                <input
-                  className="w-full bg-gray-800 p-3 rounded-xl"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+              <div className="space-y-4">
+                {/* NAME */}
+                <div className="flex flex-row justify-center items-center gap-2">
+                  <h1 className="w-28 text-center">Name</h1>
+                  <input
+                    className="w-full bg-gray-800 p-3 rounded-xl"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                {/* PHONE */}
+                <div className="flex flex-row justify-center items-center gap-2">
+                  <h1 className="w-28 text-center">Phone</h1>
+                  <input
+                    className="w-full bg-gray-800 p-3 rounded-xl"
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm({ ...form, phone: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                {/* EMAIL */}
+                <div className="flex flex-row justify-center items-center gap-2">
+                  <h1 className="w-28 text-center">Email</h1>
+                  <input
+                    className="w-full bg-gray-800 p-3 rounded-xl"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
+                    type="email"
+                    required
+                  />
+                </div>
+
+                {/* ADDRESS */}
+                <div className="flex flex-row justify-center items-center gap-2">
+                  <h1 className="w-28 text-center">Address</h1>
+                  <input
+                    className="w-full bg-gray-800 p-3 rounded-xl"
+                    value={form.address}
+                    onChange={(e) =>
+                      setForm({ ...form, address: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                {/* FACEBOOK */}
+                <div className="flex flex-row justify-center items-center gap-2">
+                  <h1 className="w-28 text-center">Facebook</h1>
+                  <input
+                    className="w-full bg-gray-800 p-3 rounded-xl"
+                    value={form.facebook}
+                    onChange={(e) =>
+                      setForm({ ...form, facebook: e.target.value })
+                    }
+                  />
+                </div>
+
+                {/* INSTAGRAM */}
+                <div className="flex flex-row justify-center items-center gap-2">
+                  <h1 className="w-28 text-center">Instagram</h1>
+                  <input
+                    className="w-full bg-gray-800 p-3 rounded-xl"
+                    value={form.instagram}
+                    onChange={(e) =>
+                      setForm({ ...form, instagram: e.target.value })
+                    }
+                  />
+                </div>
               </div>
 
-              {/* PHONE */}
-              <div className="flex flex-row justify-center items-center gap-2">
-                <h1 className="w-28 text-center">Phone</h1>
-                <input
-                  className="w-full bg-gray-800 p-3 rounded-xl"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-              </div>
-
-              {/* EMAIL */}
-              <div className="flex flex-row justify-center items-center gap-2">
-                <h1 className="w-28 text-center">Email</h1>
-                <input
-                  className="w-full bg-gray-800 p-3 rounded-xl"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                />
-              </div>
-
-              {/* ADDRESS */}
-              <div className="flex flex-row justify-center items-center gap-2">
-                <h1 className="w-28 text-center">Address</h1>
-                <input
-                  className="w-full bg-gray-800 p-3 rounded-xl"
-                  value={form.address}
-                  onChange={(e) =>
-                    setForm({ ...form, address: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* FACEBOOK */}
-              <div className="flex flex-row justify-center items-center gap-2">
-                <h1 className="w-28 text-center">Facebook</h1>
-                <input
-                  className="w-full bg-gray-800 p-3 rounded-xl"
-                  value={form.facebook}
-                  onChange={(e) =>
-                    setForm({ ...form, facebook: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* INSTAGRAM */}
-              <div className="flex flex-row justify-center items-center gap-2">
-                <h1 className="w-28 text-center">Instagram</h1>
-                <input
-                  className="w-full bg-gray-800 p-3 rounded-xl"
-                  value={form.instagram}
-                  onChange={(e) =>
-                    setForm({ ...form, instagram: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* IMAGE UPLOAD */}
-            <input
-              type="file"
-              className="w-full bg-gray-800 p-3 rounded-xl"
-              onChange={handleImage}
-            />
-
-            {form.image && (
-              <img
-                src={URL.createObjectURL(form.image)}
-                className="w-24 h-24 rounded-full object-cover mx-auto mt-3 shadow-lg"
+              {/* IMAGE UPLOAD */}
+              <input
+                type="file"
+                className="w-full bg-gray-800 p-3 rounded-xl"
+                onChange={handleImage}
               />
-            )}
 
-            <div className="flex gap-3 mt-4">
-              <button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-xl text-white font-semibold"
-                onClick={submitForm}
-              >
-                {editingIndex !== null ? "Update" : "Add"}
-              </button>
-
-              {editingIndex !== null && (
-                <button
-                  className="bg-gray-700 hover:bg-gray-600 transition px-4 py-2 rounded-xl text-white"
-                  onClick={resetForm}
-                >
-                  Cancel
-                </button>
+              {form.image && (
+                <img
+                  src={URL.createObjectURL(form.image)}
+                  className="w-24 h-24 rounded-full object-cover mx-auto mt-3 shadow-lg"
+                />
               )}
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-xl text-white font-semibold"
+                  type="submit"
+                >
+                  {editingIndex !== null ? "Update" : "Add"}
+                </button>
+
+                {editingIndex !== null && (
+                  <button
+                    className="bg-gray-700 hover:bg-gray-600 transition px-4 py-2 rounded-xl text-white"
+                    onClick={resetForm}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </form>
 
         {/* CONTACT LIST */}
         <div className="flex-1 space-y-5">
